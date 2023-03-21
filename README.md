@@ -4,13 +4,13 @@
 
 #### ✨ A fork with a greatly improved interface: [34j/so-vits-svc-fork](https://github.com/34j/so-vits-svc-fork)
 
-#### ✨ A client supports real-time conversion: [w-okada/voice-changer](https://github.com/w-okada/voice-changer)
+#### ✨ A client supports real-time conversion for 4.0, 4.0v2 (win, mac , linux without installing python): [w-okada/voice-changer](https://github.com/w-okada/voice-changer)
 
 ## 📏 Terms of Use
 
 # Warning: Please solve the authorization problem of the dataset on your own. You shall be solely responsible for any problems caused by the use of non-authorized datasets for training and all consequences thereof.The repository and its maintainer, svc develop team, have nothing to do with the consequences!
 
-1. This project is established for academic exchange purposes only and is intended for communication and learning purposes. It is not intended for production environments. 
+1. This project is established for academic exchange purposes only and is intended for communication and learning purposes. It is not intended for production environments.
 2. Any videos based on sovits that are published on video platforms must clearly indicate in the description that they are used for voice changing and specify the input source of the voice or audio, for example, using videos or audios published by others and separating the vocals as input source for conversion, which must provide clear original video or music links. If your own voice or other synthesized voices from other commercial vocal synthesis software are used as the input source for conversion, you must also explain it in the description.
 3. You shall be solely responsible for any infringement problems caused by the input source. When using other commercial vocal synthesis software as input source, please ensure that you comply with the terms of use of the software. Note that many vocal synthesis engines clearly state in their terms of use that they cannot be used for input source conversion.
 4. Continuing to use this project is deemed as agreeing to the relevant provisions stated in this repository README. This repository README has the obligation to persuade, and is not responsible for any subsequent problems that may arise.
@@ -115,6 +115,7 @@ python inference_main.py -m "logs/44k/G_30400.pth" -c "configs/config.json" -n "
 ```
 
 Required parameters:
+
 - -m, --model_path: path to the model.
 - -c, --config_path: path to the configuration file.
 - -n, --clean_names: a list of wav file names located in the raw folder.
@@ -122,6 +123,7 @@ Required parameters:
 - -s, --spk_list: target speaker name for synthesis.
 
 Optional parameters: see the next section
+
 - -a, --auto_predict_f0: automatic pitch prediction for voice conversion, do not enable this when converting songs as it can cause serious pitch issues.
 - -cm, --cluster_model_path: path to the clustering model, fill in any value if clustering is not trained.
 - -cr, --cluster_infer_ratio: proportion of the clustering solution, range 0-1, fill in 0 if the clustering model is not trained.
@@ -133,6 +135,7 @@ If the results from the previous section are satisfactory, or if you didn't unde
 ### Automatic f0 prediction
 
 During the 4.0 model training, an f0 predictor is also trained, which can be used for automatic pitch prediction during voice conversion. However, if the effect is not good, manual pitch prediction can be used instead. But please do not enable this feature when converting singing voice as it may cause serious pitch shifting!
+
 - Set "auto_predict_f0" to true in inference_main.
 
 ### Cluster-based timbre leakage control
@@ -167,23 +170,23 @@ Use [onnx_export.py](https://github.com/svc-develop-team/so-vits-svc/blob/4.0/on
 
 - [MoeSS](https://github.com/NaruseMioShirakana/MoeSS)
 
-Note: For Hubert Onnx models, please use the models provided by MoeSS. Currently, they cannot be exported on their own (Hubert in fairseq has many unsupported operators and things involving constants that can cause errors or result in problems with the input/output shape and results when exported.)  [Hubert4.0](https://huggingface.co/NaruseMioShirakana/MoeSS-SUBModel)
+Note: For Hubert Onnx models, please use the models provided by MoeSS. Currently, they cannot be exported on their own (Hubert in fairseq has many unsupported operators and things involving constants that can cause errors or result in problems with the input/output shape and results when exported.) [Hubert4.0](https://huggingface.co/NaruseMioShirakana/MoeSS-SUBModel)
 
 ## 📚 Some legal provisions for reference
 
 #### 《民法典》
 
-##### 第一千零一十九条 
+##### 第一千零一十九条
 
 任何组织或者个人不得以丑化、污损，或者利用信息技术手段伪造等方式侵害他人的肖像权。未经肖像权人同意，不得制作、使用、公开肖像权人的肖像，但是法律另有规定的除外。
 未经肖像权人同意，肖像作品权利人不得以发表、复制、发行、出租、展览等方式使用或者公开肖像权人的肖像。
 对自然人声音的保护，参照适用肖像权保护的有关规定。
 
-#####  第一千零二十四条 
+##### 第一千零二十四条
 
-【名誉权】民事主体享有名誉权。任何组织或者个人不得以侮辱、诽谤等方式侵害他人的名誉权。  
+【名誉权】民事主体享有名誉权。任何组织或者个人不得以侮辱、诽谤等方式侵害他人的名誉权。
 
-#####  第一千零二十七条
+##### 第一千零二十七条
 
 【作品侵害名誉权】行为人发表的文学、艺术作品以真人真事或者特定人为描述对象，含有侮辱、诽谤内容，侵害他人名誉权的，受害人有权依法请求该行为人承担民事责任。
-行为人发表的文学、艺术作品不以特定人为描述对象，仅其中的情节与该特定人的情况相似的，不承担民事责任。  
+行为人发表的文学、艺术作品不以特定人为描述对象，仅其中的情节与该特定人的情况相似的，不承担民事责任。
