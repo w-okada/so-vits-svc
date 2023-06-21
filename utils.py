@@ -6,7 +6,9 @@ import argparse
 import logging
 import json
 import subprocess
+import warnings
 import random
+import functools
 
 import librosa
 import numpy as np
@@ -15,6 +17,7 @@ import torch
 from torch.nn import functional as F
 from modules.commons import sequence_mask
 from hubert import hubert_model
+
 MATPLOTLIB_FLAG = False
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -46,6 +49,21 @@ f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 #         factor = torch.ones(f0.shape[0], 1, 1).to(f0.device)
 #     f0_norm = (f0 - means.unsqueeze(-1)) * factor.unsqueeze(-1)
 #     return f0_norm
+
+def deprecated(func):
+    """This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used."""
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.warn("Call to deprecated function {}.".format(func.__name__),
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning)  # reset filter
+        return func(*args, **kwargs)
+    return new_func
+
 def normalize_f0(f0, x_mask, uv, random_scale=True):
     # calculate means based on x_mask
     uv_sum = torch.sum(uv, dim=1, keepdim=True)
@@ -62,6 +80,19 @@ def normalize_f0(f0, x_mask, uv, random_scale=True):
         exit(0)
     return f0_norm * x_mask
 
+def compute_f0_uv_torchcrepe(wav_numpy, p_len=None, sampling_rate=44100, hop_length=512,device=None,cr_threshold=0.05):
+    from modules.crepe import CrepePitchExtractor
+    x = wav_numpy
+    if p_len is None:
+        p_len = x.shape[0]//hop_length
+    else:
+        assert abs(p_len-x.shape[0]//hop_length) < 4, "pad length error"
+    
+    f0_min = 50
+    f0_max = 1100
+    F0Creper = CrepePitchExtractor(hop_length=hop_length,f0_min=f0_min,f0_max=f0_max,device=device,threshold=cr_threshold)
+    f0,uv = F0Creper(x[None,:].float(),sampling_rate,pad_to=p_len)
+    return f0,uv
 
 def plot_data_to_numpy(x, y):
     global MATPLOTLIB_FLAG
@@ -88,9 +119,6 @@ def plot_data_to_numpy(x, y):
 
 
 def interpolate_f0(f0):
-    '''
-    对F0进行插值处理
-    '''
 
     data = np.reshape(f0, (f0.size, 1))
 
@@ -120,7 +148,7 @@ def interpolate_f0(f0):
                 for k in range(i, frame_number):
                     ip_data[k] = last_value
         else:
-            ip_data[i] = data[i]
+            ip_data[i] = data[i] # this may not be necessary
             last_value = data[i]
 
     return ip_data[:,0], vuv_vector[:,0]
@@ -174,7 +202,7 @@ def f0_to_coarse(f0):
 
   f0_mel[f0_mel <= 1] = 1
   f0_mel[f0_mel > f0_bin - 1] = f0_bin - 1
-  f0_coarse = (f0_mel + 0.5).long() if is_torch else np.rint(f0_mel).astype(np.int)
+  f0_coarse = (f0_mel + 0.5).int() if is_torch else np.rint(f0_mel).astype(np.int)
   assert f0_coarse.max() <= 255 and f0_coarse.min() >= 1, (f0_coarse.max(), f0_coarse.min())
   return f0_coarse
 
@@ -469,6 +497,19 @@ def repeat_expand_2d(content, target_len):
     return target
 
 
+def mix_model(model_paths,mix_rate,mode):
+  mix_rate = torch.FloatTensor(mix_rate)/100
+  model_tem = torch.load(model_paths[0])
+  models = [torch.load(path)["model"] for path in model_paths]
+  if mode == 0:
+     mix_rate = F.softmax(mix_rate,dim=0)
+  for k in model_tem["model"].keys():
+     model_tem["model"][k] = torch.zeros_like(model_tem["model"][k])
+     for i,model in enumerate(models):
+        model_tem["model"][k] += model[k]*mix_rate[i]
+  torch.save(model_tem,os.path.join(os.path.curdir,"output.pth"))
+  return os.path.join(os.path.curdir,"output.pth")
+  
 class HParams():
   def __init__(self, **kwargs):
     for k, v in kwargs.items():
